@@ -1,5 +1,4 @@
 # Copyright (c) 2018-2021 The MobileCoin Foundation
-
 ####################################
 ######### Public Variables #########
 ####################################
@@ -33,7 +32,11 @@ endif
 ### Local Variables
 
 CARGO_PACKAGE = libmobilecoin
-ARCHS_IOS = x86_64-apple-ios aarch64-apple-ios
+#ARCHS_IOS = x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi 
+ARCHS_IOS = aarch64-apple-darwin
+#ARCHS_IOS = aarch64-apple-ios-sim
+#ARCHS_IOS = aarch64-apple-ios-macabi
+
 IOS_LIB = libmobilecoin.a
 IOS_LIB_STRIPPED = libmobilecoin_stripped.a
 IOS_C_HEADERS = include/*
@@ -47,7 +50,7 @@ all: setup ios
 
 .PHONY: setup
 setup:
-	rustup target add $(ARCHS_IOS)
+	rustup target add $(ARCHS_IOS) || true
 	rustup component add llvm-tools-preview
 	rustup run --install stable cargo install cargo-binutils
 
@@ -63,12 +66,21 @@ else
 endif
 
 .PHONY: $(ARCHS_IOS)
-x86_64-apple-ios aarch64-apple-ios: CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
-x86_64-apple-ios aarch64-apple-ios: CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
-x86_64-apple-ios: LD_ARCH = x86_64
+#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi : CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi : CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+aarch64-apple-darwin: CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+aarch64-apple-darwin: CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+
 aarch64-apple-ios: LD_ARCH = arm64
+x86_64-apple-ios: LD_ARCH = x86_64
+x86_64-apple-darwin: LD_ARCH = x86_64
+x86_64-apple-ios-macabi: LD_ARCH = x86_64
+aarch64-apple-darwin: LD_ARCH = arm64
+aarch64-apple-ios-sim: LD_ARCH = arm64
+aarch64-apple-ios-macabi: LD_ARCH = arm64
+
 $(ARCHS_IOS):
-	$(CARGO_ENV_FLAGS) $(CARGO) build --package $(CARGO_PACKAGE) --target $@ $(CARGO_BUILD_FLAGS)
+	 export RUST_BACKTRACE=full; $(CARGO_ENV_FLAGS) $(CARGO) build --package $(CARGO_PACKAGE) --target $@ $(CARGO_BUILD_FLAGS) -Z build-std
 
 	@# Extract object files from static archive.
 	@cd $(CARGO_TARGET_DIR)/$@/$(BUILD_CONFIG_FOLDER) && \
@@ -90,15 +102,17 @@ $(ARCHS_IOS):
 	@cd $(CARGO_TARGET_DIR)/$@/$(BUILD_CONFIG_FOLDER) && \
 		rm -f $(IOS_LIB_STRIPPED) || true
 	cd $(CARGO_TARGET_DIR)/$@/$(BUILD_CONFIG_FOLDER) && \
-		ld -r -arch $(LD_ARCH) -x -keep_private_externs \
+		ld -r -arch $(LD_ARCH) -x -adhoc_codesign -keep_private_externs \
 			-exported_symbols_list exported-symbols.def \
 			-o $(IOS_LIB_STRIPPED) \
 			extracted/*.o
 
+
 .PHONY: out/ios/$(IOS_LIB)
 out/ios/$(IOS_LIB): $(ARCHS_IOS)
 	mkdir -p out/ios
-	lipo -create -output $@ $(foreach arch,$^,$(CARGO_TARGET_DIR)/$(arch)/$(BUILD_CONFIG_FOLDER)/$(IOS_LIB_STRIPPED))
+	echo "skip lipo step below, will be bundling differently"
+	echo "lipo -create -output $@ $(foreach arch,$^,$(CARGO_TARGET_DIR)/$(arch)/$(BUILD_CONFIG_FOLDER)/$(IOS_LIB_STRIPPED))"
 
 	mkdir -p out/ios/include
 	cp $(IOS_C_HEADERS) out/ios/include
