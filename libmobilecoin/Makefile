@@ -32,10 +32,7 @@ endif
 ### Local Variables
 
 CARGO_PACKAGE = libmobilecoin
-#ARCHS_IOS = x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi 
-ARCHS_IOS = aarch64-apple-darwin
-#ARCHS_IOS = aarch64-apple-ios-sim
-#ARCHS_IOS = aarch64-apple-ios-macabi
+ARCHS_IOS = x86_64-apple-ios x86_64-apple-darwin x86_64-apple-ios-macabi aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-ios-macabi 
 
 IOS_LIB = libmobilecoin.a
 IOS_LIB_STRIPPED = libmobilecoin_stripped.a
@@ -66,16 +63,13 @@ else
 endif
 
 .PHONY: $(ARCHS_IOS)
-#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi : CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
-#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi : CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
-aarch64-apple-darwin: CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
-aarch64-apple-darwin: CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi x86_64-apple-ios-macabil: CARGO_ENV_FLAGS += CFLAGS="-DPB_NO_PACKED_STRUCTS=1"
+#x86_64-apple-ios aarch64-apple-ios x86_64-apple-darwin aarch64-apple-ios-sim aarch64-apple-ios-macabi x86_64-apple-ios-macabil: CARGO_ENV_FLAGS += CXXFLAGS="-DPB_NO_PACKED_STRUCTS=1"
 
-aarch64-apple-ios: LD_ARCH = arm64
 x86_64-apple-ios: LD_ARCH = x86_64
 x86_64-apple-darwin: LD_ARCH = x86_64
 x86_64-apple-ios-macabi: LD_ARCH = x86_64
-aarch64-apple-darwin: LD_ARCH = arm64
+aarch64-apple-ios: LD_ARCH = arm64
 aarch64-apple-ios-sim: LD_ARCH = arm64
 aarch64-apple-ios-macabi: LD_ARCH = arm64
 
