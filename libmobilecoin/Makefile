@@ -38,6 +38,13 @@ IOS_LIB = libmobilecoin.a
 IOS_LIB_STRIPPED = libmobilecoin_stripped.a
 IOS_C_HEADERS = include/*
 
+### Helper Function
+
+define BINARY_copy
+	mkdir -p out/ios/target/$(1)/release
+	cp $(CARGO_TARGET_DIR)/$(1)/release/libmobilecoin_stripped.a out/ios/target/$(1)/release;
+endef
+
 ####################################
 ############## Targets #############
 ####################################
@@ -98,7 +105,7 @@ $(ARCHS_IOS):
 .PHONY: out/ios/$(IOS_LIB)
 out/ios/$(IOS_LIB): $(ARCHS_IOS)
 	mkdir -p out/ios
-	lipo -create -output $@ $(foreach arch,$^,$(CARGO_TARGET_DIR)/$(arch)/$(BUILD_CONFIG_FOLDER)/$(IOS_LIB_STRIPPED))
+	$(foreach arch,$^,$(call BINARY_copy,$(arch)))
 
 	mkdir -p out/ios/include
 	cp $(IOS_C_HEADERS) out/ios/include
